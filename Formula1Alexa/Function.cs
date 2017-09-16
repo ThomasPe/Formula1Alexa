@@ -9,6 +9,7 @@ using Alexa.NET.Request.Type;
 using Alexa.NET.Response;
 using Alexa.NET;
 using ErgastApi.Client;
+using ErgastApi;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -51,20 +52,35 @@ namespace Formula1Alexa
 
         }
 
-        private async Task<SkillResponse> HandleIntentRequest(IntentRequest intentRequest)
+        public async Task<SkillResponse> HandleIntentRequest(IntentRequest intentRequest)
         {
             return await GetNextRaceIntent();
         }
 
-        private async Task<SkillResponse> GetNextRaceIntent()
+        public async Task<SkillResponse> GetNextRaceIntent()
         {
+            var speech = new SsmlOutputSpeech();
+
             var request = new ErgastApi.Requests.RaceListRequest()
             {
-
+                Season = ErgastApi.Requests.Seasons.Current,
+                Round = ErgastApi.Requests.Rounds.Next
             };
+            var response = await _client.GetResponseAsync(request);
+            //var nextrace = response.Races.FirstOrDefault();
+            string nextrace = null;
+            if(nextrace != null)
+            {
+                speech.Ssml = $"<speak>Der nächste Tag</speak>";
+            }
+            else
+            {
+                speech.Ssml = "<speak>Diese Saison gibt es kein Rennen mehr.</speak>";
+            }
 
-            var speech = new Alexa.NET.Response.SsmlOutputSpeech();
-            speech.Ssml = "<speak>Formel 1 Ergebnisse</speak>";
+
+
+
 
             // create the response using the ResponseBuilder
             var finalResponse = ResponseBuilder.Tell(speech);
